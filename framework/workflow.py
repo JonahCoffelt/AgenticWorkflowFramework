@@ -1,8 +1,9 @@
 from .task import Task
 from math import sqrt
 
+
 class Workflow:
-    def __init__(self, *tasks: Task):
+    def __init__(self, *tasks: Task) -> None:
         """
         A container for a sequence of tasks
         """
@@ -50,17 +51,22 @@ class Workflow:
         # Dont care about the base case step
         self.ordering = self.ordering[1:]
 
-    def update(self):
+    def update(self) -> None:
         """
         TODO: Will update the tasks and make them do things
         """
 
     @property
     def parallelism(self) -> int:
+        """Gets the parallelism of the workflow, a measure of how well tasks can be concurently completed throughout the workflow"""
         return sum([len(step) / len(self.tasks) for step in self.ordering]) / len(self.ordering)
     
     @property
     def complexity(self) -> int:
+        """Gets the dependency complexity of the workflow, a measure of the complexity of the workflow structure """
         d_mean = sum([task.degree for task in self.tasks]) / len(self.tasks)
         return sqrt(sum([(task.degree - d_mean) ** 2 for task in self.tasks]) / len(self.tasks))
+    
+    def __repr__(self):
+        return f'<Workflow | {self.ordering}>'
         

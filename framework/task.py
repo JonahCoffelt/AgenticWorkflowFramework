@@ -3,22 +3,7 @@ from .flags import *
 from .agent import Agent
 
 class Task:
-    specification: Any
-    """Specifications for what the task should do"""
-
-    status: int=10
-    """Flag for determining the current state of the tasks. Allows for task dependency"""
-    agent: Agent=None
-    """The agent that the task is assigned to. Assuming one agent per task"""
-    input: Any=0
-    """Input being passed in from other tasks or the eviornment"""
-    output: Any=0
-    """The resulting output from the task"""
-
-    dependencies: list
-    """"""
-
-    def __init__(self, specification, *dependencies):
+    def __init__(self, specification, *dependencies) -> None:
         """
         
         """
@@ -31,9 +16,9 @@ class Task:
         self.input  = 0
         self.output = 0
 
-    def update(self):
+    def update(self) -> None:
         """
-        Update loop for the task
+        TODO: Update loop for the task
         """
 
         match self.status:
@@ -50,6 +35,7 @@ class Task:
 
     @property
     def degree(self) -> int:
+        """The number of dependencies the task has"""
         return len(self.dependencies)
 
     def __repr__(self) -> str:
