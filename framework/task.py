@@ -1,37 +1,47 @@
 from typing import Any
 from .flags import *
 from .agent import Agent
+import asyncio
 
 class Task:
-    def __init__(self, specification, *dependencies) -> None:
+    output: list[Any]
+    """"""
+    status: int
+    """"""
+    
+    
+    def __init__(self, func, *dependencies) -> None:
         """
         
         """
 
-        self.specification = specification
+        self.func = func
         self.dependencies = list(dependencies)
 
         self.status = STATUS_IDLE
 
-        self.input  = 0
-        self.output = 0
+        self.output = []
 
-    def update(self) -> None:
+    async def update(self) -> None:
         """
         TODO: Update loop for the task
         """
 
-        match self.status:
-            case int(STATUS_IDLE):
-                pass
-            case int(STATUS_IN_PROGRESS):
-                pass
-            case int(STATUS_FAILED):
-                pass
-            case int(STATUS_COMPLETE):
-                pass
-            case _:
-                pass
+        if self.status == STATUS_IDLE and all([dep.status == STATUS_COMPLETE for dep in self.dependencies]):
+            self.status = STATUS_IN_PROGRESS
+
+        if self.status == STATUS_IN_PROGRESS:
+            args = []
+            for dep in self.dependencies: args.extend(dep.output)
+
+            try: 
+                out = await self.func(*args)
+                self.output.extend([out])
+                self.status = STATUS_COMPLETE
+            except:
+                print("Task failed")
+                self.status = STATUS_FAILED
+
 
     @property
     def degree(self) -> int:
@@ -39,4 +49,4 @@ class Task:
         return len(self.dependencies)
 
     def __repr__(self) -> str:
-        return str(self.specification)
+        return f'<Task | {self.func}>'

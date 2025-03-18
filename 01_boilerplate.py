@@ -1,4 +1,5 @@
 import framework as fmk
+from sample_tasks import add_input
 
 print("\n---- sequential tasks ----")
 task_1 = fmk.Task("Task 1")
