@@ -1,0 +1,7 @@
+{
+    "type" : "query-ref",
+    "sender" : 1,
+    "recivers" : [0],
+    "content" : "This is a message",
+    "encoding" : "string"
+}
