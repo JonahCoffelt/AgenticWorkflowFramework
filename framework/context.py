@@ -1,9 +1,12 @@
 import json
 from threading import Thread
 from .messenger import Messenger
+from .message import Message
 from .server import Server
 from .agent import Agent
 from .task import Task
+import asyncio
+
 
 class Context(Messenger):
     def __init__(self):
@@ -30,7 +33,7 @@ class Context(Messenger):
 
         # Create and start the server for reciving messages
         self.server = Server(self.recive)
-
+        
         thread = Thread(target=self.start)
         thread.start()
 
@@ -47,7 +50,8 @@ class Context(Messenger):
             if reciver == 0:
                 print("Recived: ", message['content'])
             elif reciver not in self.agents:
-                self.send(*address, content=f'Failed to send message to agent {reciver} because they do not exist.', type='inform')
+                msg = Message(content=f'Failed to send message to agent {reciver} because they do not exist.')
+                self.send(msg, *address)
             else:
                 self.server.send(data, *self.agents[reciver])
 
@@ -66,7 +70,8 @@ class Context(Messenger):
             return
 
         data = self.resources[key]
-        self.send(*address, content=f'Got resource {key}: {data}', data=data, type='inform')
+        msg = Message(content=f'Got resource {key}: {data}', resources=data, type='inform')
+        self.send(msg, *address)
 
     def set_resource(self, address: ..., key: str, value: ...) -> None:
         """
@@ -87,7 +92,8 @@ class Context(Messenger):
         deps = []
         for task in dependencies:
             if task not in self.tasks:
-                self.send(*address, content=f'Failed to add the task. A given task dependency ({task}) does not exist', type='inform')
+                msg = Message(content=f'Failed to add the task. A given task dependency ({task}) does not exist')
+                self.send(msg, *address)
                 return
             deps.append(self.tasks[task])
 
@@ -106,10 +112,12 @@ class Context(Messenger):
         """
 
         if task_id not in self.tasks:
-            self.send(*address, content=f'Failed to find task with id {task_id}', type='inform')
+            msg = Message(content=f'Failed to find task with id {task_id}')
+            self.send(msg, *address)
             return
         
-        self.send(*address, content=f'Failed to find task with id {task_id}', type='inform')
+        msg = Message(content=f'Failed to find task with id {task_id}')
+        self.send(msg, *address)
 
     def register(self, address: ...) -> int:
         """
@@ -125,7 +133,8 @@ class Context(Messenger):
         self.events.append(('register', (self.available_id, address)))
 
         # Send the agent its id
-        self.send(*address, content='register', type='tool', data=[self.available_id])
+        msg = Message(content='register', type='tool', resources=[self.available_id])
+        self.send(msg, *address)
 
         # Increment to maintain unique agent ids
         self.available_id += 1

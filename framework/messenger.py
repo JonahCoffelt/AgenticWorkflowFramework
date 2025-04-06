@@ -1,4 +1,6 @@
 import json
+from .message import Message
+import asyncio
 
 
 class Messenger:
@@ -10,6 +12,7 @@ class Messenger:
         
         self.tools = {}
         self.events = []
+        self.running = True
 
     def start(self):
         """
@@ -17,13 +20,16 @@ class Messenger:
         """
         
         print('Starting')
-
         self.running = True
         while self.running:
             try:
                 self.server.listen()
             except KeyboardInterrupt:
                 self.running = False
+
+    def add_tool(self, name: str, funtion: ...):
+        self.tools[name] = function
+
 
     def recive(self, data: str, address=None) -> str:
         """
@@ -39,24 +45,13 @@ class Messenger:
                 print('unrecognized message type')
                 return 'None'
 
-    def send(self, ip: str=None, port: int=None, content: str='', data=[], recivers: list[int]=[], type: str='inform') -> str:
+    def send(self, message: Message, ip: str=None, port: int=None) -> str:
         """
         Sends a message to the given ip
         """
 
-        # Format the message 
-        message = {}
-        message['content']  = content
-        message['data']     = data
-        message['recivers'] = recivers
-        message['type']     = type
-        message['sender']   = self.identifier
-
-        # Convert to json string
-        message = json.dumps(message)
-
         # Send to the context
-        return self.server.send(message, ip, port)
+        return self.server.send(message.data, ip, port)
 
     def inform(self, data: str, address=None) -> str:
         """
@@ -85,7 +80,7 @@ class Messenger:
     
         # Get the tool and the arguments 
         func = self.tools[data['content']]
-        args = data['data']
+        args = data['resources']
         
         # Add to the events list
         self.events.append(('message', func, args))

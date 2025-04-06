@@ -95,21 +95,24 @@ class App(ctk.CTk):
         Sends a message based on current inputs
         """
         
-        agent.send(content=self.message_entry.get(), recivers=[int(rec) for rec in filter(lambda x: x, self.recivers_entry.get().split(' '))])
+        msg = fmk.Message(content=self.message_entry.get(), recivers=[int(rec) for rec in filter(lambda x: x, self.recivers_entry.get().split(' '))])
+        agent.send(msg)
 
     def set_resource(self):
         """
         Sends a message based on current inputs
         """
 
-        agent.send(type='tool', content='set resource', data=[self.set_key_entry.get(), self.set_value_entry.get()])
+        msg = fmk.Message(type='tool', content='set resource', resources=[self.set_key_entry.get(), self.set_value_entry.get()])
+        agent.send(msg)
 
     def get_resource(self):
         """
         Sends a message based on current inputs
         """
 
-        agent.send(type='tool', content='get resource', data=[self.get_key_entry.get()])
+        msg = fmk.Message(type='tool', content='get resource', resources=[self.get_key_entry.get()])
+        agent.send(msg)
 
 
     def add_message(self, text):

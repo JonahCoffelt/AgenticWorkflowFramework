@@ -2,6 +2,7 @@ import json
 from threading import Thread
 from .messenger import Messenger
 from .client import Client
+from .message import Message
 
 
 class Agent(Messenger):
@@ -20,7 +21,8 @@ class Agent(Messenger):
         thread.start()
 
         # Reister this agent with the server
-        self.send(content='register', type='tool')
+        register_request = Message(content='register', type='tool')
+        self.send(register_request)
 
     def register(self, address, identifier: int):
         print(f'Registered with id {identifier}')

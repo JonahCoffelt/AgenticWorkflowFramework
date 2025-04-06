@@ -4,5 +4,5 @@
     "recivers" : [0],
     "content" : "This is a message",
     "encoding" : "string",
-    "data" : 0
+    "resources" : 0
 }
