@@ -1,5 +1,6 @@
 import pygame as pg
 import math
+from .node import Node
 
 
 class Mouse:
@@ -42,10 +43,16 @@ class Mouse:
         
         match self.viewport:
             case 'center':
+                start = self.ui.grid.screen_to_world((self.x, self.y))
                 if y > 0:
                     self.ui.grid.scale = max(self.ui.grid.scale * 1 * 1.1, 10.0)
                 else:
                     self.ui.grid.scale = max(self.ui.grid.scale * 1 / 1.1, 10.0)
+                end = self.ui.grid.screen_to_world((self.x, self.y))
+
+                self.ui.grid.x += (start[0] - end[0]) * self.ui.grid.scale
+                self.ui.grid.y += (start[1] - end[1]) * self.ui.grid.scale
+
                 # print(self.ui.grid.scale)
             case 'top':
                 ...
@@ -69,9 +76,15 @@ class Mouse:
             case 'bottom edge':
                 return 'bottom edge'
             case 'center':
-                self.grid_start = self.ui.grid.position[:]
                 self.mouse_start = self.position
-                return 'grid'
+                self.grid_start = self.ui.grid.position[:]
+
+                node = self.ui.node_handler.collide(self.x, self.y)
+                if node: 
+                    self.node_start = (node.x, node.y)
+                    return node
+                else:
+                    return 'grid'
             case 'top':
                 ...
             case 'bottom':
@@ -88,6 +101,24 @@ class Mouse:
         
         if isinstance(self.item, str):
             self.hold_string() 
+        elif isinstance(self.item, Node):
+            self.hold_node() 
+
+    def hold_node(self):
+        """
+        
+        """
+
+        x = self.node_start[0] - (self.mouse_start[0] - self.position[0]) / self.ui.grid.scale
+        y = self.node_start[1] + (self.mouse_start[1] - self.position[1]) / self.ui.grid.scale
+
+        if self.ui.keys[pg.K_LSHIFT]:
+            x = round(x)
+            y = round(y)
+
+        self.item.x = x
+        self.item.y = y
+
 
     def hold_string(self):
         """

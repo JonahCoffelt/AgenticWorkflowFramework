@@ -4,6 +4,7 @@ from .viewport import Viewport
 from .grid import Grid
 from .mouse import Mouse
 from .keys import Keys
+from .node_handler import NodeHandler
 
 
 class UIHandler:
@@ -20,11 +21,12 @@ class UIHandler:
         self.win = dashboard.win
 
         # Handlers
-        self.preferences = Preferences()
-        self.viewport    = Viewport(self, 0.05, .2, .15, .2)
-        self.grid        = Grid(self)
-        self.mouse       = Mouse(self)
-        self.keys        = Keys(self)
+        self.preferences  = Preferences()
+        self.viewport     = Viewport(self, 0.05, .2, .15, .2)
+        self.grid         = Grid(self)
+        self.node_handler = NodeHandler(self)
+        self.mouse        = Mouse(self)
+        self.keys         = Keys(self)
 
     def draw(self):
         """
@@ -36,6 +38,7 @@ class UIHandler:
         self.viewport.draw()
 
         self.grid.draw()
+        self.node_handler.draw()
         self.grid.show()
 
     def update(self):
