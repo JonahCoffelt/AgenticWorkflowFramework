@@ -2,7 +2,7 @@ import json
 from threading import Thread
 from .messenger import Messenger
 from .message import Message
-from .server import Server
+from .server import Server, PORT, IP
 from .agent import Agent
 from .task import Task
 import asyncio
@@ -147,6 +147,14 @@ class Context(Messenger):
         """
 
         del self.agents[identifier]
+
+    def close(self) -> None:
+        """
+        Closes the server and all running threads
+        """
+
+        self.running = False
+        self.send(Message(content="Closing"))
 
     def __repr__(self) -> str:
         return f'<Context>'

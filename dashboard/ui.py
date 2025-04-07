@@ -53,7 +53,8 @@ class UIHandler:
 
         for event in self.events:
             if event.type == pg.QUIT:
-                self.running = False
+                self.dashboard.ctx.close()
+                self.dashboard.running = False
             if event.type == pg.VIDEORESIZE:
                 self.dashboard.win_size = (event.w, event.h)
                 self.grid.set_surf()
