@@ -15,18 +15,19 @@ class Context(Messenger):
         # Agent attributes
         self.agents = {}
         self.available_id = 1
-        self.identifier = 0
 
         # Tasks
         self.task_id = 0
         self.tasks = {}
 
         # Tools
-        self.tools['register']     = self.register
-        self.tools['deregister']   = self.deregister
-        self.tools['add task']     = self.add_task
-        self.tools['get resource'] = self.get_resource
-        self.tools['set resource'] = self.set_resource
+        self.tools['register']        = self.register
+        self.tools['deregister']      = self.deregister
+        self.tools['get resource']    = self.get_resource
+        self.tools['set resource']    = self.set_resource
+        self.tools['remove resource'] = self.remove_resource
+        self.tools['add task']        = self.add_task
+        self.tools['get task']        = self.get_task
 
         # Reasources
         self.resources = {}
@@ -36,6 +37,19 @@ class Context(Messenger):
         
         thread = Thread(target=self.start)
         thread.start()
+
+    def recive(self, data: str, address=None) -> str:
+        """
+        Recives a data from the server and sends it to the correct function to handle it
+        """
+        
+        data_dict = json.loads(data)
+        if data_dict['sender'] not in self.agents and not (data_dict['type'] == 'tool' and data_dict['content'] == 'register'):
+            msg = Message(content=f'You are not registered in this context')
+            self.send(msg, *address)
+            return
+
+        super().recive(data, address)
 
     def inform(self, data: str, address=None) -> str:
         """
@@ -66,7 +80,8 @@ class Context(Messenger):
         """
 
         if key not in self.resources:
-            self.send(*address, content=f'Failed to get resource {key}', type='inform')
+            msg = Message(content=f'Failed to get resource {key}')
+            self.send(msg, *address)
             return
 
         data = self.resources[key]
@@ -82,8 +97,20 @@ class Context(Messenger):
 
         self.resources[key] = value
 
+    def remove_resource(self, address: ..., key: str) -> None:
+        """
+        Gets a context resource and returns it to the requester
+        """
 
-    def add_task(self, address: ..., specifications: str, dependencies: list):
+        if key not in self.resources:
+            msg = Message(content=f'Failed to find resource {key}')
+            self.send(msg, *address)
+            return
+
+        print(f'Removing resource {key}')
+        del self.resources[key]
+
+    def add_task(self, address: ..., specifications: str, dependencies: list) -> None:
         """
         Adds a new task to the context
         """
@@ -106,18 +133,77 @@ class Context(Messenger):
 
         print(f'Added task: {task}')
 
-    def get_task(self, address: ..., task_id: int):
+    def _find_task(self, address: ..., task_id: int) -> Task:
+        """
+        Find the task if it is availible. Send failure if not found
+        """
+        
+        # Convert str to int
+        task_id = int(task_id)
+
+        # Search for it, send failure message if not found
+        if task_id not in self.tasks:
+            msg = Message(content=f'Failed to find task with id {task_id}')
+            self.send(msg, *address)
+            return None
+        
+        # Return the task
+        return self.tasks[task_id]
+
+    def get_task(self, address: ..., task_id: int) -> None:
         """
         Gets a task from the context
         """
 
-        if task_id not in self.tasks:
-            msg = Message(content=f'Failed to find task with id {task_id}')
-            self.send(msg, *address)
-            return
-        
-        msg = Message(content=f'Failed to find task with id {task_id}')
+        # Find the task. Halt if no task was found
+        task = self._find_task(task_id)
+        if not task: return
+
+        # Send message
+        msg = Message(content=f'{task.name} | {task_id} : {task.specifications}\nCurrent Input : {task.input}', resources=task.input, type='inform')
         self.send(msg, *address)
+
+    def remove_task(self, address: ..., task_id: int) -> None:
+        """
+        Removes the given task from the context
+        """
+
+        # Find the task. Halt if no task was found
+        task = self._find_task(task_id)
+        if not task: return
+        
+        task_id = int(task_id)
+        del self.tasks[task_id]
+
+    def set_task_name(self, address: ..., task_id: int, name: str) -> None:
+        """
+        Removes the given task from the context
+        """
+
+        task = self._find_task(task_id)
+        if not task: return
+        
+        task.name = name
+
+    def set_task_specifications(self, address: ..., task_id: int, specifications: str) -> None:
+        """
+        Removes the given task from the context
+        """
+
+        task = self._find_task(task_id)
+        if not task: return
+        
+        task.specifications = specifications
+
+    def set_task_output(self, address: ..., task_id: int, output: ...) -> None:
+        """
+        Removes the given task from the context
+        """
+
+        task = self._find_task(task_id)
+        if not task: return 
+
+        task.output = output
 
     def register(self, address: ...) -> int:
         """
@@ -141,11 +227,18 @@ class Context(Messenger):
         
         return str(self.available_id - 1)
 
-    def deregister(self, address, identifier: int):
+    def deregister(self, address, identifier: int) -> None:
         """
         Removes an agent from the context
         """
 
+        identifier = int(identifier)
+        if identifier not in self.agents:
+            msg = Message(content=f'Failed to find agent with id {identifier}')
+            self.send(msg, *address)
+            return
+
+        print(f'deregistering agent {identifier} at {self.agents[identifier]}')
         del self.agents[identifier]
 
     def close(self) -> None:

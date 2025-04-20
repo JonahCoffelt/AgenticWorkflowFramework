@@ -19,3 +19,17 @@ class Preferences:
         self.font_size:        int   = font_size
         self.radius:           int   = radius
         self.padding:          int   = padding
+
+    def set_dark_mode(self):
+        self.primary_color    = (25, 25, 25)
+        self.secondary_color  = (35, 35, 35)
+        self.tertiary_color   = (45, 45, 45)
+        self.background_color = (75, 75, 75)
+        self.font_color       = (225, 225, 225)
+
+    def set_light_mode(self):
+        self.primary_color    = (225, 225, 225)
+        self.secondary_color  = (215, 215, 215)
+        self.tertiary_color   = (210, 210, 210)
+        self.background_color = (175, 175, 175)
+        self.font_color       = (25, 25, 25)

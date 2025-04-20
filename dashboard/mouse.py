@@ -45,9 +45,9 @@ class Mouse:
             case 'center':
                 start = self.ui.grid.screen_to_world((self.x, self.y))
                 if y > 0:
-                    self.ui.grid.scale = max(self.ui.grid.scale * 1 * 1.1, 10.0)
+                    self.ui.grid.scale = min(max(self.ui.grid.scale * 1 * 1.1, 10.0), 400.0)
                 else:
-                    self.ui.grid.scale = max(self.ui.grid.scale * 1 / 1.1, 10.0)
+                    self.ui.grid.scale = min(max(self.ui.grid.scale * 1 / 1.1, 10.0), 400.0)
                 end = self.ui.grid.screen_to_world((self.x, self.y))
 
                 self.ui.grid.x += (start[0] - end[0]) * self.ui.grid.scale

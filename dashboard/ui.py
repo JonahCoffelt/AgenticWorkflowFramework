@@ -5,6 +5,7 @@ from .grid import Grid
 from .mouse import Mouse
 from .keys import Keys
 from .node_handler import NodeHandler
+from .text import FontRenderer
 
 
 class UIHandler:
@@ -27,6 +28,7 @@ class UIHandler:
         self.node_handler = NodeHandler(self)
         self.mouse        = Mouse(self)
         self.keys         = Keys(self)
+        self.font         = FontRenderer()
 
     def draw(self):
         """

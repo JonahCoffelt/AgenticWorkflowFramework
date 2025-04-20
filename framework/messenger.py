@@ -13,6 +13,7 @@ class Messenger:
         self.tools = {}
         self.events = []
         self.running = True
+        self.identifier = 0
 
     def start(self):
         """
@@ -51,6 +52,7 @@ class Messenger:
         """
 
         # Send to the context
+        message.sender = self.identifier
         return self.server.send(message.data, ip, port)
 
     def inform(self, data: str, address=None) -> str:
