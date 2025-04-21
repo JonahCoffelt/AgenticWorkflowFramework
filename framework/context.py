@@ -126,12 +126,15 @@ class Context(Messenger):
 
         # Make the task and save it with id task_id
         task = Task(specifications, deps)
-        self.tasks[self.task_id] = task
+        id = self.task_id
+        self.tasks[id] = task
 
         # Increment to maintain unique task ids
         self.task_id += 1
 
         print(f'Added task: {task}')
+
+        return id
 
     def _find_task(self, address: ..., task_id: int) -> Task:
         """
