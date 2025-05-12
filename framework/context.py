@@ -28,6 +28,9 @@ class Context(Messenger):
         self.tools['remove resource'] = self.remove_resource
         self.tools['add task']        = self.add_task
         self.tools['get task']        = self.get_task
+        self.tools['set task output'] = self.set_task_output
+        self.tools['set task status'] = self.set_task_status
+        self.tools['claim task']      = self.claim_task
 
         # Reasources
         self.resources = {}
@@ -50,6 +53,31 @@ class Context(Messenger):
             return
 
         super().recive(data, address)
+
+    def update_tasks(self) -> None:
+        """
+        Updates all the tasks when a task has been updated
+        """
+        
+        for task in self.tasks.values():
+            msg = task.update()
+            if not msg: continue
+
+
+            for agent_id in task.agents:
+                self.send(msg, *self.agents[agent_id])
+
+    def send_message(self, message: Message) -> None:
+        """
+        Sends a messge object to an agent by their id.
+        """
+        
+        for agent_id in message.recivers:
+            if agent_id not in self.agents:
+                print(f"Failed to send message to {agent_id} because they are not registered")
+                continue
+            
+            self.send(message, *self.agents[agent_id])
 
     def inform(self, data: str, address=None) -> str:
         """
@@ -159,11 +187,11 @@ class Context(Messenger):
         """
 
         # Find the task. Halt if no task was found
-        task = self._find_task(task_id)
+        task = self._find_task(address, task_id)
         if not task: return
 
         # Send message
-        msg = Message(content=f'{task.name} | {task_id} : {task.specifications}\nCurrent Input : {task.input}', resources=task.input, type='inform')
+        msg = Message(content=f'{task.name} | {task_id} : {task.specifications}\nCurrent Input : {task.input}\nStatus: {task.status}\nCurrent Output: {task.output}', resources=task.input, type='inform')
         self.send(msg, *address)
 
     def remove_task(self, address: ..., task_id: int) -> None:
@@ -203,10 +231,38 @@ class Context(Messenger):
         Removes the given task from the context
         """
 
-        task = self._find_task(task_id)
+        task = self._find_task(address, task_id)
         if not task: return 
 
+        print(f'Task {task_id} output set to : {output}')
+
         task.output = output
+
+    def set_task_status(self, address: ..., task_id: int, status: int) -> None:
+        """
+        Removes the given task from the context
+        """
+
+        task = self._find_task(address, task_id)
+        if not task: return 
+
+        print(f'Task {task_id} status set to : {status}')
+
+        task.status = status
+
+        self.update_tasks()
+
+    def claim_task(self, address: ..., agent_id: int, task_id: int) -> None:
+        """
+        Adds the agent to the tasks list so it can be updated when the task changes
+        """
+
+        task = self._find_task(address, task_id)
+        if not task: return 
+
+        print(f'Task {task_id} added agent : {address}')
+
+        task.agents.add(agent_id)
 
     def register(self, address: ...) -> int:
         """

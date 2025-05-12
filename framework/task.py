@@ -1,4 +1,5 @@
 from typing import Any
+from .message import Message
 
 
 class Task:
@@ -23,6 +24,15 @@ class Task:
         self.dependencies   = dependencies
         self.status = 0
         self.output = None
+        self.agents = set()
+
+    def update(self) -> None:
+        """
+        
+        """
+        if self.status == 0 and all(task.status == 2 for task in self.dependencies):
+            self.status = 1
+            return Message(content=f'{self.name} : Task status has been marked updated to in progress, you can now start.', resources=self.input, type='inform')
 
     @property
     def input(self) -> list[Any]:

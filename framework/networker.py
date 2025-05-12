@@ -36,7 +36,7 @@ class Networker:
         Listens for incoming messages
         """
 
-        data, address = self.socket.recvfrom(1024)
+        data, address = self.socket.recvfrom(10_000)
         self.callback(data, address)
 
     def close(self):

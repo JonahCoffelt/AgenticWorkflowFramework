@@ -37,6 +37,12 @@ class Messenger:
         Recives a data from the server and sends it to the correct function to handle it
         """
         
+        try:
+            json.loads(data) 
+        except:
+            print(data)
+            raise ValueError("Things are bad")
+
         match json.loads(data)['type']:
             case 'inform':
                 return self.inform(data, address)

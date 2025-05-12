@@ -27,6 +27,19 @@ class Message:
         self._data['sender']    = sender
         self._data['recivers']  = recivers
 
+    def as_string(self) -> str:
+        """Converts this message to a single string."""
+
+        string = ""
+        string += "Message:\n"
+        string += f"\tContent: {self.content}\n"
+        string += f"\tData: {self.resources}\n"
+        string += f"\tType: {self.type}\n"
+        string += f"\tSender: {self.sender}\n"
+        string += f"\tRecivers: {self.recivers}\n"
+
+        return string
+
     # Getters
     @property
     def content(self) -> str:
