@@ -2,11 +2,9 @@ import os
 import json
 import time
 from groq import Groq
-from tools import tools_definition, tools_map
 
 
 API_KEY = os.getenv("AI_API_KEY")
-
 
 class LLM:
     def __init__(self, model: str="llama-3.3-70b-versatile", tools_definition=None, tools_map=None):
@@ -44,7 +42,7 @@ class LLM:
                 )
                 got_valid_reponse = True
             except:
-                print("oh no")
+                print("Failed to get valid LLM response, trying again...")
 
 
         # Add the message to message history

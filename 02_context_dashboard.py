@@ -37,6 +37,7 @@ class Dashboard:
 
         # Create a context
         self.ctx = fmk.Context()
+        self.ctx.add_task((None, None), "Test Task", [])
 
         # Create a UI handler
         self.ui = UIHandler(self)

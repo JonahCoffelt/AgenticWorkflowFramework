@@ -7,6 +7,10 @@ class NodeHandler:
     
     def __init__(self, ui):
         self.ui = ui
+
+        for task in self.ui.dashboard.ctx.tasks:
+            print(task)
+        
         self.nodes = [Node(self) for i in range(10)]
         self.nodes.append(Node(self))
 
