@@ -20,7 +20,8 @@ class Context(Server):
             "get resource" : self.get_resource,
             "add task" : self.add_task,
             "set task status" : self.set_task_status,
-            "set task output" : self.set_task_output
+            "set task output" : self.set_task_output,
+            "get task" : self.get_task
         }
 
     def send(self, message: Message, recivers: list[tuple[str, int] | NetworkNode] | tuple[str, int] | NetworkNode=(IP, PORT)):
@@ -107,3 +108,12 @@ class Context(Server):
 
         self.tasks[name].output = output
         return {"name" : name, "output" : output}
+
+    def get_task(self, name) -> dict | Error:
+        """Gets the values of a task. Returns an error if invalid task name is given"""
+    
+        if name not in self.tasks:
+            return Error(3, f"Got a task name that does not exist, {name}")
+        
+        task = self.tasks[name]
+        return {"name" : name, "specifications" : task.specifications, "status" : task.status, "output" : task.output}

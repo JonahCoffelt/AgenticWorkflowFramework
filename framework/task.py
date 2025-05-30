@@ -2,7 +2,8 @@ import pickle
 from typing import Optional, Any
 from .networking.client import Client
 from .networking.network_node import IP, PORT
-from .message import Notification
+from .message import Request, Notification
+from .data_validation import validate_string
 
 
 class Task():
@@ -59,6 +60,10 @@ class UserTask(Client):
     def __init__(self, name: str, specifications: str, dependencies: Optional[list]=None):
         super().__init__()
 
+        self.methods = {
+            "get task" : self.get_task
+        }
+
         self.name = name
         self.specifications = specifications
         self.dependencies = dependencies if dependencies else []
@@ -81,3 +86,47 @@ class UserTask(Client):
         message.recivers = [(IP, PORT)]
 
         super().send(pickle.dumps(message))
+
+    def get_task(self, name: str, specifications: str, status: str, output: Any):
+        """Updates this task with the values on the context"""
+        self._status = status
+        self._output = output
+        self.holds.remove("task")
+
+
+    @property
+    def name(self) -> str: return self._name
+    @property
+    def specifications(self) -> str: return self._specifications
+    @property
+    def dependencies(self) -> str: return self._dependencies
+    @property
+    def status(self) -> str: 
+        self.holds.add("task")
+        self.send(Request("get task", {"name" : self.name}))
+        while "task" in self.holds: ...
+
+        return self._status
+    @property
+    def output(self) -> str: return self._output
+
+    @name.setter
+    def name(self, value: str):
+        self._name = validate_string(value)
+    @specifications.setter
+    def specifications(self, value: str):
+        self._specifications = validate_string(value)
+    @dependencies.setter
+    def dependencies(self, value: str):
+        self._dependencies = value
+    @status.setter
+    def status(self, value: str):
+        if value not in ("idle", "in progress", "complete", "failed"):
+            return False
+        
+        self._status = value
+        self.send(Notification("set task status", {"name" : self.name, "status" : self._status}))
+    @output.setter
+    def output(self, value: str):        
+        self._output = value
+        self.send(Notification("set task output", {"name" : self.name, "output" : self._output}))

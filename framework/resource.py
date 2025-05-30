@@ -37,10 +37,10 @@ class Resource(Client):
 
         super().send(pickle.dumps(message))
 
-
     def update_value(self, name: str, value: Any):
-        self.value = value
+        self._value = value
         self.holds.remove("value")
+
 
     @property
     def name(self) -> str: return self._name
@@ -48,7 +48,7 @@ class Resource(Client):
     def value(self) -> Any: 
         self.holds.add("value")
         self.send(Request("get resource", {"name" : self.name}))
-        while "value" in self.holds: print("waiting")
+        while "value" in self.holds: ...
 
         return self._value
 

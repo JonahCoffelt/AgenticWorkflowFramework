@@ -1,1 +1,1 @@
-print(x.value)
+task1.status
