@@ -11,12 +11,13 @@ class Agent(Client):
         self.is_registered = False
 
         self.methods = {
-            "register" : self.register
+            "register" : self.register,
+            "deregister" : self.deregister
         }
 
-        self.send(Request("register", {"address": self.address}))
+        self.send(Request("register", address=self.address))
 
-    def send(self, message: Message, recivers: list[tuple[str, int] | NetworkNode] | tuple[str, int] | NetworkNode=(IP, PORT)):
+    def send(self, message: Message, recivers: list[tuple[str, int] | NetworkNode] | tuple[str, int] | NetworkNode=(IP, PORT)) -> Message:
 
         message.sender = self.address
         message.recivers = recivers
@@ -24,8 +25,9 @@ class Agent(Client):
         for reciver in message.recivers:
             super().send(pickle.dumps(message), reciver)
 
-    # Following methods are interanlly provided tools for the agents
+        return Message
 
+    # Following methods are interanlly provided tools for the agents
     def register(self, registered: bool) -> None:
         self.is_registered = registered
     def deregister(self, registered: bool) -> None:

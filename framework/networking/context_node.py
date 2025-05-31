@@ -11,24 +11,29 @@ class ContextNode(NetworkNode):
         self.holds = set()
 
     def receive(self, data: bytes, address: tuple[str, int]) -> None:
-        """
-        Processes a recived message. 
-        """
+        """Processes a recived message."""
 
         message: Message = pickle.loads(data)
         self.handle_message(message)
+
+    def await_response(self, message: Request | Notification):
+        """Waits until the message has recived a reponse"""
+        self.holds.add(message.method)
+        while message.method in self.holds: ...
 
     def handle_message(self, message: Message) -> None:
         """Matches the message type to the correct method for handling it"""
         match type(message).__name__:
             case Request.__name__:
                 self.handle_request(message)
+                if message.method in self.holds: self.holds.remove(message.method)
             case Result.__name__:
                 self.handle_result(message)
             case Error.__name__:
                 self.handle_error(message)
             case Notification.__name__:
                 self.handle_notification(message)
+                if message.method in self.holds: self.holds.remove(message.method)
             case _:
                 print("Context recived invalid Message type: {type(message)}")
 
@@ -64,7 +69,7 @@ class ContextNode(NetworkNode):
             return
 
         # Return the result to the agent that called
-        self.send(Notification(message.method, result), message.sender)
+        self.send(Notification(message.method, **result), message.sender)
 
     def handle_result(self, message: Result) -> None:
         """"""

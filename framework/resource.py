@@ -24,38 +24,40 @@ class Resource(Client):
         super().__init__()
         
         self.methods = {
-            "get resource" : self.update_value
+            "get resource" : self.get_resource
         }
 
         self.name = name
         self.value = value
 
-    def send(self, message: Notification):
+    def send(self, message: Notification) -> Message:
 
         message.sender = self.address
         message.recivers = [(IP, PORT)]
 
         super().send(pickle.dumps(message))
 
-    def update_value(self, name: str, value: Any):
-        self._value = value
-        self.holds.remove("value")
+        return message
 
+    def get_resource(self, name: str, value: Any):
+        """Called when a request result comes in for get resource"""
+        self._value = value
+
+    def sync(self):
+        """Syncs data with the context. Pauses operation until data is recived"""
+        self.await_response(self.send(Request("get resource", name=self.name)))
 
     @property
     def name(self) -> str: return self._name
     @property
     def value(self) -> Any: 
-        self.holds.add("value")
-        self.send(Request("get resource", {"name" : self.name}))
-        while "value" in self.holds: ...
-
+        self.sync()
         return self._value
 
     @value.setter
     def value(self, value: Any):
         self._value = value
-        self.send(Notification("set resource", {"name" : self.name, "value" : value}))
+        self.send(Notification("set resource", name=self.name, value=value))
     @name.setter
     def name(self, value: str):
         self._name = validate_string(value)

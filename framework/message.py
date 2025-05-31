@@ -18,7 +18,7 @@ class Request(Message):
     method: str
     params: Optional[dict]
 
-    def __init__(self, method: str, params: Optional[dict]=None) -> None:
+    def __init__(self, method: str, **params) -> None:
         """Expect a response from the other side"""
         self.method = method
         self.params = params
@@ -50,7 +50,7 @@ class Notification(Message):
     method: str
     params: Optional[dict]
 
-    def __init__(self, method: str, params: Optional[dict]=None) -> None:
-        """One-way messages that don’t expect a response"""
+    def __init__(self, method: str, **params) -> None:
+        """One-way messages that dont expect a response"""
         self.method = method
         self.params = params

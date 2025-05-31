@@ -2,7 +2,7 @@ import pickle
 from typing import Optional, Any
 from .networking.client import Client
 from .networking.network_node import IP, PORT
-from .message import Request, Notification
+from .message import Message, Request, Notification
 from .data_validation import validate_string
 
 
@@ -78,21 +78,25 @@ class UserTask(Client):
         self.agents = set()
 
         # Add on the context
-        self.send(Notification("add task", {"name" : self.name, "specifications" : self.specifications, "dependencies" : self.dependencies}))
+        self.send(Notification("add task", name=self.name, specifications=self.specifications, dependencies=self.dependencies))
 
-    def send(self, message: Notification):
+    def send(self, message: Notification) -> Message:
 
         message.sender = self.address
         message.recivers = [(IP, PORT)]
 
         super().send(pickle.dumps(message))
 
+        return message
+
     def get_task(self, name: str, specifications: str, status: str, output: Any):
         """Updates this task with the values on the context"""
         self._status = status
         self._output = output
-        self.holds.remove("task")
 
+    def sync(self) -> None:
+        """Syncs data with the context. Pauses operation until data is recived"""
+        self.await_response(self.send(Request("get task", name=self.name)))
 
     @property
     def name(self) -> str: return self._name
@@ -101,14 +105,13 @@ class UserTask(Client):
     @property
     def dependencies(self) -> str: return self._dependencies
     @property
-    def status(self) -> str: 
-        self.holds.add("task")
-        self.send(Request("get task", {"name" : self.name}))
-        while "task" in self.holds: ...
-
+    def status(self) -> str:
+        self.sync()
         return self._status
     @property
-    def output(self) -> str: return self._output
+    def output(self) -> str: 
+        self.sync()
+        return self._output
 
     @name.setter
     def name(self, value: str):
@@ -125,8 +128,8 @@ class UserTask(Client):
             return False
         
         self._status = value
-        self.send(Notification("set task status", {"name" : self.name, "status" : self._status}))
+        self.send(Notification("set task status", name=self.name, status=self._status))
     @output.setter
     def output(self, value: str):        
         self._output = value
-        self.send(Notification("set task output", {"name" : self.name, "output" : self._output}))
+        self.send(Notification("set task output", name=self.name, output=self._output))

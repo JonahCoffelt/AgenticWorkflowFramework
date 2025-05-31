@@ -24,12 +24,14 @@ class Context(Server):
             "get task" : self.get_task
         }
 
-    def send(self, message: Message, recivers: list[tuple[str, int] | NetworkNode] | tuple[str, int] | NetworkNode=(IP, PORT)):
+    def send(self, message: Message, recivers: list[tuple[str, int] | NetworkNode] | tuple[str, int] | NetworkNode=(IP, PORT)) -> Message:
 
         message.sender = self.address
         message.recivers = recivers
 
         super().send(pickle.dumps(message))
+
+        return message
 
     def receive(self, data: bytes, address: tuple[str, int]) -> None:
         """
