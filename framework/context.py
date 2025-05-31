@@ -25,6 +25,8 @@ class Context(Server):
             "get task" : self.get_task
         }
 
+        self.error_log = {}
+
     def send(self, message: Message, recivers: list[tuple[str, int] | NetworkNode] | tuple[str, int] | NetworkNode=(IP, PORT)) -> Message:
 
         message.sender = self.address
@@ -45,6 +47,10 @@ class Context(Server):
         message: Message = pickle.loads(data)
 
         if isinstance(message, Request): self.hold = True
+        elif isinstance(message, Error):
+            code = message.code
+            if code not in self.error_log: self.error_log[code] = 0
+            self.error_log[code]+=1
 
         for reciver in message.recivers:
             if reciver == self.address: continue
@@ -136,4 +142,3 @@ class Context(Server):
         
         task = self.tasks[name]
         return Result("task", task)
-        # return {"name" : name, "specifications" : task.specifications, "status" : task.status, "output" : task.output}

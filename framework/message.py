@@ -44,6 +44,7 @@ class Error(Message):
         self.code = code
         self.message = message
         self.data = data
+        self.value = None
 
 
 class Notification(Message):

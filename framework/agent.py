@@ -26,8 +26,8 @@ class Agent(Client):
 
         if isinstance(message, Request): self.hold = True
 
-        # Send to all recivers
-        for reciver in message.recivers: super().send(pickle.dumps(message), reciver)
+        # Send to context to distribute
+        super().send(pickle.dumps(message))
 
         # Get result if needed
         if isinstance(message, Request): 

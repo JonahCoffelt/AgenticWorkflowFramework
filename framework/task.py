@@ -2,7 +2,7 @@ import pickle
 from typing import Optional, Any
 from .networking.client import Client
 from .networking.network_node import IP, PORT
-from .message import Request, Result, Notification, Message
+from .message import Request, Result, Error, Notification, Message
 from .data_validation import validate_string
 
 
@@ -60,25 +60,22 @@ class UserTask(Client):
     def __init__(self, name: str, specifications: str, dependencies: Optional[list]=None):
         super().__init__()
 
-        self.methods = {
-            "get task" : self.get_task
-        }
-
-        self.name = name
-        self.specifications = specifications
         self.dependencies = dependencies if dependencies else []
-
         for i, dependency in enumerate(self.dependencies):
             if isinstance(dependency, str): continue
             self.dependencies[i] = dependency.name
+
+        # Add on the context
+        self.send(Notification("add task", name=name, specifications=specifications, dependencies=self.dependencies))
+
+        self.name = name
+        self.specifications = specifications
 
         # Default values
         self.status = "idle"
         self.output = None
         self.agents = set()
 
-        # Add on the context
-        self.send(Notification("add task", name=self.name, specifications=self.specifications, dependencies=self.dependencies))
 
     def send(self, message: Message) -> Result | None:
 
@@ -93,11 +90,6 @@ class UserTask(Client):
         if isinstance(message, Request): 
             self.await_result()
             return self.recent_result
-
-    def get_task(self, name: str, specifications: str, status: str, output: Any):
-        """Updates this task with the values on the context"""
-        self._status = status
-        self._output = output
 
     def sync(self) -> None:
         """Syncs data with the context. Pauses operation until data is recived"""
@@ -135,11 +127,9 @@ class UserTask(Client):
         self._dependencies = value
     @status.setter
     def status(self, value: str):
-        if value not in ("idle", "in progress", "complete", "failed"):
-            return False
-        self._status = value
-        self.send(Notification("set task status", name=self.name, status=self._status))
+        result = self.send(Request("set task status", name=self.name, status=value))
+        if not isinstance(result, Error): self._status = result.value
     @output.setter
     def output(self, value: str):        
-        self._output = value
-        self.send(Notification("set task output", name=self.name, output=self._output))
+        result = self.send(Request("set task output", name=self.name, output=value))
+        if not isinstance(result, Error): self._output = result.value

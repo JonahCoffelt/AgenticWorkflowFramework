@@ -79,4 +79,8 @@ class ContextNode(NetworkNode):
         """"""
 
         # Call the method given in the message
-        self.call_method(message)
+        result = self.call_method(message)
+
+        if not isinstance(result, Error): return
+        result.recivers = (IP, PORT)
+        self.send(result)
