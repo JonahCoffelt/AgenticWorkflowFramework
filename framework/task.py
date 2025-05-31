@@ -2,7 +2,7 @@ import pickle
 from typing import Optional, Any
 from .networking.client import Client
 from .networking.network_node import IP, PORT
-from .message import Message, Request, Notification
+from .message import Request, Result, Notification, Message
 from .data_validation import validate_string
 
 
@@ -80,14 +80,19 @@ class UserTask(Client):
         # Add on the context
         self.send(Notification("add task", name=self.name, specifications=self.specifications, dependencies=self.dependencies))
 
-    def send(self, message: Notification) -> Message:
+    def send(self, message: Message) -> Result | None:
 
         message.sender = self.address
         message.recivers = [(IP, PORT)]
 
+        if isinstance(message, Request): self.hold = True
+
         super().send(pickle.dumps(message))
 
-        return message
+        # Get result if needed
+        if isinstance(message, Request): 
+            self.await_result()
+            return self.recent_result
 
     def get_task(self, name: str, specifications: str, status: str, output: Any):
         """Updates this task with the values on the context"""
@@ -96,7 +101,13 @@ class UserTask(Client):
 
     def sync(self) -> None:
         """Syncs data with the context. Pauses operation until data is recived"""
-        self.await_response(self.send(Request("get task", name=self.name)))
+        result = self.send(Request("get task", name=self.name))
+        task: Task = result.value
+
+        self._specifications = task.specifications
+        self._status = task.status
+        self._output = task.output
+        self._agents = task.agents
 
     @property
     def name(self) -> str: return self._name
@@ -126,7 +137,6 @@ class UserTask(Client):
     def status(self, value: str):
         if value not in ("idle", "in progress", "complete", "failed"):
             return False
-        
         self._status = value
         self.send(Notification("set task status", name=self.name, status=self._status))
     @output.setter

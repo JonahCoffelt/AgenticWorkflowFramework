@@ -16,6 +16,7 @@ class Context(Server):
         self.methods = {
             "register" : self.register,
             "deregister" : self.deregister,
+            "message" : self.message,
             "set resource" : self.set_resource,
             "get resource" : self.get_resource,
             "add task" : self.add_task,
@@ -31,7 +32,10 @@ class Context(Server):
 
         super().send(pickle.dumps(message))
 
-        return message
+        # Get result if needed
+        if isinstance(message, Request): 
+            self.await_result()
+            return self.recent_result
 
     def receive(self, data: bytes, address: tuple[str, int]) -> None:
         """
@@ -39,6 +43,8 @@ class Context(Server):
         """
 
         message: Message = pickle.loads(data)
+
+        if isinstance(message, Request): self.hold = True
 
         for reciver in message.recivers:
             if reciver == self.address: continue
@@ -54,30 +60,42 @@ class Context(Server):
         
         super().send(pickle.dumps(message), reciver)
 
-    # Following methods are provided internal methods for context interaction
-    
-    def register(self, address: tuple) -> dict:
+    def call_tool(self, name: str, reciver=(IP, PORT), **params) -> Result:
+        """Wrapper for the send command that calls a tool"""
+        if reciver == self.address: return self.call_method(Request(name, **params))
+        return self.send(Request(name, **params), recivers=reciver)
+
+    #######################################################################
+    #                          Internal Methods                           #
+    #######################################################################
+
+    def register(self, address: tuple) -> Result:
         """Adds an agent to the context"""
         self.agents.add(address)
-        return {"registered" : True}
+        return Result("registered", True)
     
-    def deregister(self, address: tuple) -> dict:
+    def deregister(self, address: tuple) -> Result:
         """Removes an agent from the context"""
         self.agents.remove(address)
-        return {"registered" : False}
+        return Result("registered", False)
     
-    def set_resource(self, name: str, value: Any) -> dict:
+    def message(self, content: str) -> Result:
+        """Recives a message"""
+        print("Context recived message: ", content)
+        return Result("recived", True)
+
+    def set_resource(self, name: str, value: Any) -> Result:
         """Removes an agent from the context"""
         self.resources[name] = value
-        return {"name" : name, "value" : value}
+        return Result(name, value)
     
-    def get_resource(self, name: str) -> dict | Error:
+    def get_resource(self, name: str) -> Result | Error:
         """Removes an agent from the context"""
         if name not in self.resources:
             return Error(1, f"Given resource key, {name}, is not in the context.")
-        return {"name" : name, "value" : self.resources[name]}
+        return Result(name, self.resources[name])
     
-    def add_task(self, name: str, specifications: str, dependencies: Optional[list[str]]=None) -> dict | Error:
+    def add_task(self, name: str, specifications: str, dependencies: Optional[list[str]]=None) -> Result | Error:
         """Adds a new task to the context"""
 
         dependencies_as_tasks = []
@@ -89,10 +107,9 @@ class Context(Server):
             dependencies_as_tasks.append(self.tasks[dependency])
 
         self.tasks[name] = Task(name, specifications, dependencies_as_tasks)
-
-        return {"name" : name}
+        return Result("name", name)
     
-    def set_task_status(self, name: str, status: str) -> dict | Error:
+    def set_task_status(self, name: str, status: str) -> Result | Error:
         """Sets the status of the tasks. Returns an error if invalid task name or status is given"""
 
         if name not in self.tasks:
@@ -100,22 +117,23 @@ class Context(Server):
         if not self.tasks[name].set_status(status):
             return Error(4, f"Invalid task status type, {status}")
         
-        return {"name" : name, "status" : status}
+        return Result("status", status)
     
-    def set_task_output(self, name: str, output: Any) -> dict | Error:
+    def set_task_output(self, name: str, output: Any) -> Result | Error:
         """Sets the status of the tasks. Returns an error if invalid task name is given"""
 
         if name not in self.tasks:
             return Error(3, f"Got a task name that does not exist, {name}")
 
         self.tasks[name].output = output
-        return {"name" : name, "output" : output}
+        return Result("output", output)
 
-    def get_task(self, name) -> dict | Error:
+    def get_task(self, name) -> Result | Error:
         """Gets the values of a task. Returns an error if invalid task name is given"""
     
         if name not in self.tasks:
             return Error(3, f"Got a task name that does not exist, {name}")
         
         task = self.tasks[name]
-        return {"name" : name, "specifications" : task.specifications, "status" : task.status, "output" : task.output}
+        return Result("task", task)
+        # return {"name" : name, "specifications" : task.specifications, "status" : task.status, "output" : task.output}

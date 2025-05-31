@@ -1,1 +1,1 @@
-task1.status
+print(tool_result.value)
