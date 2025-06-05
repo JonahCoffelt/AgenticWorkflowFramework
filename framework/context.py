@@ -22,15 +22,16 @@ class Context(Server):
             "add task" : self.add_task,
             "set task status" : self.set_task_status,
             "set task output" : self.set_task_output,
-            "get task" : self.get_task
+            "get task" : self.get_task,
+            "get agents" : self.get_registered_agents
         }
 
         self.error_log = {}
 
-    def send(self, message: Message, recivers: list[tuple[str, int] | NetworkNode] | tuple[str, int] | NetworkNode=(IP, PORT)) -> Message:
+    def send(self, message: Message, receivers: list[tuple[str, int] | NetworkNode] | tuple[str, int] | NetworkNode=(IP, PORT)) -> Message:
 
         message.sender = self.address
-        message.recivers = recivers
+        message.receivers = receivers
 
         super().send(pickle.dumps(message))
 
@@ -52,24 +53,25 @@ class Context(Server):
             if code not in self.error_log: self.error_log[code] = 0
             self.error_log[code]+=1
 
-        for reciver in message.recivers:
-            if reciver == self.address: continue
-            self.forward(message, reciver)
+        for receiver in message.receivers:
+            if receiver == self.address: continue
+            self.forward(message, receiver)
 
-        if self.address not in message.recivers: return
+        if self.address not in message.receivers: return
 
         # Handle a message addressed to the context
         self.handle_message(message)
 
-    def forward(self, message, reciver) -> None:
-        """Forwards a message from the server to the intended reciver"""
-        
-        super().send(pickle.dumps(message), reciver)
 
-    def call_tool(self, name: str, reciver=(IP, PORT), **params) -> Result:
+    def forward(self, message, receiver) -> None:
+        """Forwards a message from the server to the intended receiver"""
+        
+        super().send(pickle.dumps(message), receiver)
+
+    def call_tool(self, name: str, receiver=(IP, PORT), **params) -> Result:
         """Wrapper for the send command that calls a tool"""
-        if reciver == self.address: return self.call_method(Request(name, **params))
-        return self.send(Request(name, **params), recivers=reciver)
+        if receiver == self.address: return self.call_method(Request(name, **params))
+        return self.send(Request(name, **params), receivers=receiver)
 
     #######################################################################
     #                          Internal Methods                           #
@@ -142,3 +144,7 @@ class Context(Server):
         
         task = self.tasks[name]
         return Result("task", task)
+    
+    def get_registered_agents(self) -> Result:
+        """Gets all the agents currently registered in the context"""
+        return Result("agents", self.agents)

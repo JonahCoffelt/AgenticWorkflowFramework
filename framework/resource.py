@@ -29,7 +29,7 @@ class Resource(Client):
     def send(self, message: Message) -> Result | None:
 
         message.sender = self.address
-        message.recivers = [(IP, PORT)]
+        message.receivers = [(IP, PORT)]
 
         if isinstance(message, Request): self.hold = True
 

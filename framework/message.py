@@ -1,46 +1,49 @@
-from typing import Any, Optional
+from typing import Any
 
 
 class Message:
+    """Data sent across the server from one node to another"""
     sender: tuple[str, int]
-    recivers: list[tuple[str, int]]
+    receivers: list[tuple[str, int]]
 
     @property
-    def recivers(self): return self._recivers
+    def receivers(self) -> list[tuple[str, int]]: 
+        return self._receivers
 
-    @recivers.setter
-    def recivers(self, value):
-        if not isinstance(value, list): value = [value]
-        self._recivers =  value
-
+    @receivers.setter
+    def receivers(self, value: list[tuple[str, int]]):
+        if not isinstance(value, list): 
+            value = [value]
+        self._receivers = value
 
 class Request(Message):
+    """Expect a response from the other side"""
     method: str
-    params: Optional[dict]
+    params: dict[str, Any] | None
 
-    def __init__(self, method: str, **params) -> None:
-        """Expect a response from the other side"""
+    def __init__(self, method: str, **params: Any) -> None:
         self.method = method
         self.params = params
 
 
 class Result(Message):
+    """Successful responses to requests"""
     key: str
     value: Any
 
     def __init__(self, key: str, value: Any) -> None:
-        """Successful responses to requests"""
         self.key = key
         self.value = value
 
 
 class Error(Message):
+    """Indicate that a request failed"""
     code: int
     message: str
-    data: Optional[Any]
+    data: Any | None
+    value: Any | None
 
-    def __init__(self, code: int, message: str, data: Optional[Any]=None) -> None:
-        """Indicate that a request failed"""
+    def __init__(self, code: int, message: str, data: Any | None=None) -> None:
         self.code = code
         self.message = message
         self.data = data
@@ -48,10 +51,10 @@ class Error(Message):
 
 
 class Notification(Message):
+    """One-way messages that dont expect a response"""
     method: str
-    params: Optional[dict]
+    params: dict[str, Any] | None
 
-    def __init__(self, method: str, **params) -> None:
-        """One-way messages that dont expect a response"""
+    def __init__(self, method: str, **params: Any) -> None:
         self.method = method
         self.params = params
