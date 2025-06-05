@@ -41,17 +41,18 @@ class Node(NetworkNode):
         message.receivers = receivers
 
         # Send the message to context to distribute to all receivers
+
         self.send_bytes(pickle.dumps(message))
 
         # Get result if needed
         if isinstance(message, Request): 
             self.await_result()
             return self.recent_result
-
+        
     def receive(self, data: bytes, address: tuple[str, int]) -> None:
         """Processes a received message."""
         message: Message = pickle.loads(data)
-        self.handle_message(message)
+        self.handle_message(message, address)
 
     def await_result(self):
         """Waits until a result has been received and processed."""
@@ -68,21 +69,21 @@ class Node(NetworkNode):
         if receiver == self.address: return self.call_method(request)
         return self.send(request, receivers=receiver)
 
-    def handle_message(self, message: Message) ->  None:
+    def handle_message(self, message: Message, address: tuple[str, int]) ->  None:
         """Matches the message type to the correct method for handling it."""
         match type(message).__name__:
             case Request.__name__:
-                self.handle_request(message)
+                self.handle_request(message, address)
             case Result.__name__:
-                self.handle_result(message)
+                self.handle_result(message, address)
             case Error.__name__:
-                self.handle_error(message)
+                self.handle_error(message, address)
             case Notification.__name__:
-                self.handle_notification(message)
+                self.handle_notification(message, address)
             case _:
                 print(f"Context received invalid Message type: {type(message).__name__}")
 
-    def call_method(self, message: Request | Notification) -> Result | Error | None:
+    def call_method(self, message: Request | Notification, address: tuple[str, int]=None) -> Result | Error | None:
         """Calls a method from a request or notification. Returns the result."""
         # Get data from the message
         method = message.method
@@ -94,12 +95,13 @@ class Node(NetworkNode):
         
         # Call the method and return result
         try:
+            
             result = self.methods[method](**params)
             return result
         except TypeError:
             return Error(6, f"Got invalid method parameters for {method}: {params}")
         
-    def handle_request(self, message: Request) -> None:
+    def handle_request(self, message: Request, address: tuple[str, int]=None) -> None:
         """
         Calls the method in the request and sends back the results.
         Args:
@@ -107,10 +109,10 @@ class Node(NetworkNode):
         """
 
         # Call the method given in the message
-        result = self.call_method(message)
+        result = self.call_method(message, address)
         self.send(result, message.sender)
 
-    def handle_result(self, message: Result) -> None:
+    def handle_result(self, message: Result, address: tuple[str, int]=None) -> None:
         """
         Saves the result and releases any hold on the node.
         Args:
@@ -119,7 +121,7 @@ class Node(NetworkNode):
         self.recent_result = message
         self._result_event.set()
 
-    def handle_error(self, message: Error) -> None:
+    def handle_error(self, message: Error, address: tuple[str, int]=None) -> None:
         """
         Saves the result and releases any hold on the node.
         Args:
@@ -130,7 +132,7 @@ class Node(NetworkNode):
         self._result_event.set()
         print(f"Error {message.code}: {message.message}")
 
-    def handle_notification(self, message: Notification) -> None:
+    def handle_notification(self, message: Notification, address: tuple[str, int]=None) -> None:
         """
         Calls the method in the notification. Sends back an error if one occurs.
         Args:
@@ -138,7 +140,7 @@ class Node(NetworkNode):
         """
 
         # Call the method given in the message
-        result = self.call_method(message)
+        result = self.call_method(message, address)
 
         # Send an error if one occurs, otherwaise, no need to respond to notification
         if isinstance(result, Error):

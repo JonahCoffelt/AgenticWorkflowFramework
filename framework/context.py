@@ -47,7 +47,7 @@ class Context(Server):
         Forwards messages to recivers other than self and handles messages addressed to the Context.
         Args:
             data (bytes): The byte data of the recived message
-            address (tuple[str, int]): Not used, but potentially could be in overrides.
+            address (tuple[str, int]): Address of the sender
         """
 
         # Load the data into a message
@@ -66,14 +66,14 @@ class Context(Server):
 
         # Handle a message addressed to the context
         if self.address not in message.receivers: return
-        self.handle_message(message)
+        self.handle_message(message, address)
 
     def forward(self, message: Message, receiver: tuple[str, int]) -> None:
         """Forwards a message from the server to the intended receiver. """
         self.send_bytes(pickle.dumps(message), receiver)
 
 
-    # ------------------------- Internal Methods -------------------------
+    # ------------------------- Exposed Methods/Tools -------------------------
 
     def register(self, address: tuple) -> Result:
         """Adds an agent to the context"""

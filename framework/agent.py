@@ -12,6 +12,18 @@ class Agent(Client):
         """Starts a client for agent-context communication and registers the agent on the context."""
         super().__init__()
  
+        self.methods = {
+            'message' : self.message
+        }
+
+
         # Register with the context
         result: Result = self.send(Request("register", address=self.address))
         self.is_registered = validate_bool(result.value)
+
+    # ------------------------- Exposed Methods/Tools -------------------------
+
+    def message(self, content: str) -> Result:
+        """Receives a message"""
+        print("Context received message: ", content)
+        return Result("received", True)
