@@ -4,7 +4,6 @@ import groq
 from groq.types.chat import ChatCompletion
 
 API_KEY = os.getenv("AI_API_KEY")
-API_KEY = "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"  # Remove for git commits
 
 class LLM:
     """Class to handle API calls to Groq for accessible LLM integration."""
