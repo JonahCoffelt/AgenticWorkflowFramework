@@ -54,9 +54,9 @@ class NetworkNode:
             except OSError:
                 self.running = False
 
-    def send(self, data: bytes | bytearray | str, address: tuple[str, int]=(IP, PORT)) -> None:
+    def send_bytes(self, data: bytes | bytearray | str, address: tuple[str, int]=(IP, PORT)) -> None:
         """
-        Sends a message to the given address (ip, port). Defaults to the sever.
+        Sends data to the given address (ip, port). Defaults to the sever.
         Args:
             data (bytes | bytearray | str): The information to be sent
             address: (tuple[str, int]): The address of the node to recive the information

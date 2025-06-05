@@ -1,7 +1,7 @@
-from .context_node import ContextNode
+from .node import Node
 
 
-class Server(ContextNode):
+class Server(Node):
+    """Wrapper class for NetworkNode on the internally defined port."""
     def __init__(self):
-        """Wrapper class for NetworkNode on the internally defined port"""
         super().__init__()

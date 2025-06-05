@@ -1,25 +1,24 @@
 import pickle
 from typing import Optional, Any
 from .networking.client import Client
-from .networking.network_node import IP, PORT
-from .message import Request, Result, Error, Notification, Message
+from .message import Request, Error, Notification
 from .data_validation import validate_string
 
 
 class Task():
+    """"""
+
     name: str
-    """Name of the tasks. Useful for identification by human agents"""
     specifications: str
-    """A peice of work to be completed"""
     dependencies: list
-    """List of tasks that this task is dependent on"""
     status: str
-    """Current state of the task (idle, in progress, complete, failed)"""
     output: Optional[Any]
-    """Result of the task"""
 
     def __init__(self, name: str, specifications: str, dependencies: Optional[list]=None):
-
+        """
+        
+        """
+        
         # Initialization values
         self.name = name
         self.specifications = specifications
@@ -75,21 +74,6 @@ class UserTask(Client):
         self.status = "idle"
         self.output = None
         self.agents = set()
-
-
-    def send(self, message: Message) -> Result | None:
-
-        message.sender = self.address
-        message.receivers = [(IP, PORT)]
-
-        if isinstance(message, Request): self.hold = True
-
-        super().send(pickle.dumps(message))
-
-        # Get result if needed
-        if isinstance(message, Request): 
-            self.await_result()
-            return self.recent_result
 
     def sync(self) -> None:
         """Syncs data with the context. Pauses operation until data is recived"""

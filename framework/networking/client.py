@@ -1,7 +1,7 @@
-from .context_node import ContextNode
+from .node import Node
 
 
-class Client(ContextNode):
+class Client(Node):
+    """Wrapper class for NetworkNode that does not specify the port."""
     def __init__(self):
-        """Wrapper class for NetworkNode that does not specify the port"""
         super().__init__(port=0)

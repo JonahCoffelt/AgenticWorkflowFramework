@@ -2,6 +2,7 @@ import framework as fmk
 import time
 
 def add(x: int, y: int) -> fmk.Result:
+    time.sleep(.5)
     return fmk.Result("sum", x + y)
 
 ctx = fmk.Context()
@@ -19,3 +20,4 @@ task1.output = 4
 task1.status = "complete"
 
 print(agent1.call_tool("add", x=2, y=6).value)
+print(task1.output)
